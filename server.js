@@ -1,29 +1,33 @@
-const express =require('express');
-const data =  require('./data.json');
+const express = require('express');
 const cors = require('cors')
+const mongoose = require('mongoose');
+const productRouter = require("./routers/productRouter");
+const userRouter = require("./routers/userRouter");
+require("dotenv").config();
+
+mongoose.connect(process.env.MONGODB_ATLAS_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+});
+
 const app = express();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-// API for products
-app.get("/api/products", (req, res) => {
-  res.send(data);
+app.use("/api/products", productRouter);
+app.use("/api/users", userRouter);
+
+app.get("/", (req, res) => {
+  res.send("Server is ready");
+});
+app.use((err, req, res, next) => {
+  res.status(500).send({ message: err.message });
 });
 
-app.get("/api/products/:id", (req, res) => {
-  const productId = req.params.id;
-  const product = data.find(x => x._id === productId);
-  if (product)
-    res.send(product);
-  else
-    res.status(404).send({ msg: "Product Not Found." })
-});
-
-// a test case for  param and query string
-app.get("/api/:id", (req, res) => {
-  res.send(`<h1>Person:${req.params.id}</h1><h2>name: ${req.query.name}</h2>`);
-});
-
-app.listen(5000, () => { 
-  console.log("Server started at http://localhost:5000") 
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
+  console.log(`Serve at http://localhost:${port}`);
 });
